@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from datetime import datetime
 
 LOG_FILE=f"{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.log"
@@ -15,9 +16,3 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-if __name__=="__main__":
-    try:
-        a=1/0
-    except Exception as e:
-        logging.info("Logging has started")
-        raise Exception("An error occurred") from e
