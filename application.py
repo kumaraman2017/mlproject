@@ -3,7 +3,7 @@ application = Flask(__name__)
 from src.pipeline.predict_pipeline import CustomData 
 app=application
 from  src.pipeline.predict_pipeline import PredictPipeline
-## Route the home page
+## Route the home page 
 
 @app.route('/')
 def index():
