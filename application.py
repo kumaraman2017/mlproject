@@ -5,7 +5,7 @@ app=application
 from  src.pipeline.predict_pipeline import PredictPipeline
 ## Route the home page 
 
-@app.route('/')
+@app.route('/') 
 def index():
     return render_template('index.html')
 
