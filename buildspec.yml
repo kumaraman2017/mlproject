@@ -1,25 +1,47 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_DEFAULT_REGION: "ap-south-1"     # ✅ CHANGE: your AWS region
+    IMAGE_REPO_NAME: "mlproject"          # ✅ CHANGE: your ECR repo name
+    CONTAINER_NAME: "mlproject"           # ✅ CHANGE: your ECS container name
+
 phases:
   install:
     runtime-versions:
-      python: 3.12   # ✅ latest stable Python at time of writing
-      docker: 20     # ✅ latest CodeBuild-supported Docker version
+      python: 3.12
+      docker: 20
     commands:
-      - echo Installing dependencies...
+      - echo "✅ [INSTALL] Installing Python dependencies..."
       - pip install --upgrade pip
       - pip install -r requirements.txt
+
   pre_build:
     commands:
-      - echo No pre-build steps needed for Elastic Beanstalk deployment.
+      - echo "✅ [PRE_BUILD] Logging in to Amazon ECR..."
+      - echo "AWS CLI version:"
+      - aws --version
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo "ECR URI: $REPOSITORY_URI"
+      - echo "Logging in to ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t mlproject .
+      - echo "✅ [BUILD] Build started on `date`"
+      - echo "Building Docker image..."
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+
   post_build:
     commands:
-      - echo Build completed on `date`
+      - echo "✅ [POST_BUILD] Pushing Docker image to ECR..."
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Creating imagedefinitions.json for ECS/Beanstalk..."
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+
 artifacts:
   files:
-    - '**/*'
+    - imagedefinitions.json
