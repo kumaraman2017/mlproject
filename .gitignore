@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+
+# Avoid pushing large deployment zips
+*.zip
